@@ -1,0 +1,24 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { SignatureData, SignatureTemplate, defaultSignatureData, demoSignatureData } from '@/lib/signature-data'
+import { generateSignatureHTML } from '@/lib/email-html-generator'
+import { DetailsForm } from '@/components/signature-studio/details-form'
+import { TemplateGallery } from '@/components/signature-studio/template-gallery'
+import { SignaturePreview } from '@/components/signature-studio/signature-preview'
+import { ExportPanel } from '@/components/signature-studio/export-panel'
+import { BrandingControls } from '@/components/signature-studio/branding-controls'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Mail, RotateCcw, Sparkles } from 'lucide-react'
+
+export default function Page() {
+  const [data, setData] = useState<SignatureData>({ ...defaultSignatureData })
+  const [copied, setCopied] = useState(false)
+  const html = useMemo(() => generateSignatureHTML(data, data.template), [data])
+  const change = (field: keyof SignatureData, value: string | number | boolean) => setData(previous => ({ ...previous, [field]: value, updatedAt: Date.now() }))
+  const copySignature = async () => { const text = [data.fullName, data.jobTitle, data.companyName, data.emailAddress].filter(Boolean).join(' · '); if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]); else await navigator.clipboard?.writeText(html); setCopied(true); window.setTimeout(() => setCopied(false), 1800) }
+  const reset = () => setData({ ...defaultSignatureData, updatedAt: Date.now() })
+  return <main className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5"><header className="sticky top-0 z-10 border-b bg-background/90 backdrop-blur"><div className="mx-auto flex max-w-[1440px] items-center justify-between px-5 py-4"><div className="flex items-center gap-3"><div className="rounded-xl bg-primary p-2 text-primary-foreground"><Mail /></div><div><h1 className="text-xl font-semibold tracking-tight">Email Signature Studio</h1><p className="text-xs text-muted-foreground">Build once. Paste everywhere.</p></div></div><div className="flex gap-2"><Button variant="outline" size="sm" onClick={() => setData(demoSignatureData())}><Sparkles data-icon="inline-start" />Load Demo</Button><Button variant="ghost" size="sm" onClick={reset}><RotateCcw data-icon="inline-start" />Reset</Button></div></div></header><div className="mx-auto flex max-w-[1440px] flex-col gap-8 px-5 py-8"><section className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]"><Card className="h-fit"><CardHeader><CardTitle>Editor</CardTitle></CardHeader><CardContent><Tabs defaultValue="details"><TabsList className="grid w-full grid-cols-3"><TabsTrigger value="details">Details</TabsTrigger><TabsTrigger value="branding">Branding</TabsTrigger><TabsTrigger value="templates">Templates</TabsTrigger></TabsList><TabsContent value="details" className="mt-5"><DetailsForm data={data} onChange={change} /></TabsContent><TabsContent value="branding" className="mt-5"><BrandingControls data={data} onChange={change} /></TabsContent><TabsContent value="templates" className="mt-5"><TemplateGallery selectedTemplate={data.template} onSelectTemplate={(template: SignatureTemplate) => change('template', template)} /></TabsContent></Tabs></CardContent></Card><div className="flex flex-col gap-6"><SignaturePreview data={data} onCopy={copySignature} /><ExportPanel data={data} /></div></section><section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]"><Card><CardHeader><CardTitle>Generated Signature Code</CardTitle></CardHeader><CardContent><pre className="max-h-[420px] overflow-auto rounded-xl bg-slate-950 p-5 text-xs leading-relaxed text-slate-200">{html}</pre><div className="mt-3 flex gap-2"><Button variant="outline" onClick={() => navigator.clipboard?.writeText(html)}>Copy HTML</Button><Button variant="outline" onClick={() => { const a = document.createElement('a'); a.href = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`; a.download = 'email-signature.html'; a.click() }}>Download HTML</Button></div></CardContent></Card><Card className="h-fit"><CardHeader><CardTitle>Export checklist</CardTitle></CardHeader><CardContent className="flex flex-col gap-3 text-sm text-muted-foreground"><p>Selected template: <strong className="text-foreground">{data.template.replaceAll('-', ' ')}</strong></p><p>Every field change regenerates the preview and standalone HTML.</p><p>{copied ? 'Signature copied with rich HTML.' : 'Use Copy Signature to paste formatted content into your email client.'}</p></CardContent></Card></section></div></main>
+}

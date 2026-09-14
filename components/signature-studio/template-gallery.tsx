@@ -1,0 +1,8 @@
+'use client'
+import { SignatureTemplate, TEMPLATE_INFO, templateIds } from '@/lib/signature-data'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+
+export function TemplateGallery({ selectedTemplate, onSelectTemplate }: { selectedTemplate: SignatureTemplate; onSelectTemplate: (template: SignatureTemplate) => void }) {
+  return <section><div className="mb-5"><h2 className="text-xl font-semibold">Choose a template</h2><p className="text-sm text-muted-foreground">Every option changes the live structure and exported HTML.</p></div><div className="grid gap-3 sm:grid-cols-2">{templateIds.map((id, index) => { const info = TEMPLATE_INFO[id]; const selected = selectedTemplate === id; return <Card key={id} className={`overflow-hidden transition-all ${selected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'}`}><div className="h-24 bg-muted/50 p-3" style={{ borderLeft: `6px solid ${['#2563eb','#111827','#14b8a6','#e11d48','#a16207','#7c3aed','#0f766e','#db2777'][index]}` }}><div className="h-2 w-24 rounded bg-foreground/80" /><div className="mt-2 h-2 w-16 rounded bg-foreground/30" /><div className="mt-3 flex gap-1"><span className="h-1.5 w-8 rounded bg-primary/60" /><span className="h-1.5 w-5 rounded bg-muted-foreground/30" /></div></div><div className="flex items-center justify-between gap-3 p-3"><div><h3 className="text-sm font-medium">{info.name}</h3><p className="mt-1 text-xs text-muted-foreground">{info.description}</p></div><Button size="sm" variant={selected ? 'default' : 'outline'} onClick={() => onSelectTemplate(id)}>{selected ? 'Selected' : 'Use Template'}</Button></div></Card> })}</div></section>
+}
